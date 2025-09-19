@@ -50,6 +50,7 @@ ObjectiveCAPI *ObjectiveCAPI::create_block(const String& objCTypes, const Callab
 }
 
 ObjectiveCAPI *ObjectiveCAPI::wrap_object(Object *godot_object, bool retaining_reference) const {
+	print_line("Hello from Godot Obj-C!");
 	return nullptr;
 }
 

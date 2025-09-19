@@ -52,7 +52,7 @@ if ARGUMENTS["platform"] in ["macos", "ios"]:
         for directory in source_directories
     ]
     library = env.SharedLibrary(
-        "addons/godot_arkit/build/libobjcgdextension",
+        "addons/godot_arkit/build/libobjcgdextension{}{}".format(env["suffix"], env["SHLIBSUFFIX"]),
         source=sources,
     )
 else:
