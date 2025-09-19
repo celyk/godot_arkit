@@ -5,6 +5,14 @@ import sys
 
 env = SConscript("godot-cpp/SConstruct").Clone()
 
+# Add support for generating compilation database files
+#env.Tool("compilation_db")
+#compiledb = env.CompilationDatabase("compile_commands.json")
+#env.Alias("compiledb", compiledb)
+
+import os
+env.PrependENVPath("PATH", os.getenv("PATH"))
+
 #opts = Variables(customs, ARGUMENTS)
 
 # Set the target path and name.
@@ -15,13 +23,14 @@ target_name = "libgdexample"
 env.Append(CPPPATH=["src"])  # Add the src folder to the include path.
 env.Append(CFLAGS=["-O0", "-g"])  # Make it a debug build.
 
-# Use Clang on macOS.
 if sys.platform == "darwin":
     env["CC"] = "clang"
 
 if ARGUMENTS["platform"] in ["macos", "ios"]:
 	# Compile flags
     env.Append(LINKFLAGS="-framework Foundation")
+    env.Append(LINKFLAGS="-framework ARKit")
+    #env.Append(LINKFLAGS="-framework UIKit")
 
     # Compile with debugging symbols
     if ARGUMENTS.get("debugging_symbols") == 'true':
