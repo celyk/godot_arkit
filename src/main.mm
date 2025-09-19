@@ -19,16 +19,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 #include "ObjectiveCAPI.hpp"
-#include "ObjectiveCClass.hpp"
-#include "ObjectiveCObject.hpp"
-#include "ObjectiveCPointer.hpp"
 
 #include <godot_cpp/godot.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/engine.hpp>
 
 using namespace godot;
+
+namespace objcgdextension {}
 using namespace objcgdextension;
 
 static void initialize(ModuleInitializationLevel level) {
@@ -36,10 +36,10 @@ static void initialize(ModuleInitializationLevel level) {
 		return;
 	}
 
-	ClassDB::register_abstract_class<ObjectiveCObject>();
+	/*ClassDB::register_abstract_class<ObjectiveCObject>();
 	ClassDB::register_abstract_class<ObjectiveCClass>();
 	ClassDB::register_abstract_class<ObjectiveCAPI>();
-	ClassDB::register_abstract_class<ObjectiveCPointer>();
+	ClassDB::register_abstract_class<ObjectiveCPointer>();*/
 	Engine::get_singleton()->register_singleton("ObjectiveC", memnew(ObjectiveCAPI));
 }
 
@@ -48,7 +48,7 @@ static void terminate(ModuleInitializationLevel level) {
 		return;
 	}
 
-	Engine::get_singleton()->unregister_singleton("ObjectiveC");
+	//Engine::get_singleton()->unregister_singleton("ObjectiveC");
 }
 
 extern "C" GDExtensionBool objcgdextension_entrypoint(
