@@ -1,0 +1,29 @@
+# Cache files
+.scons*
+.cache/
+__pycache__/
+
+# Built files
+build/*
+!build/.gdignore
+*.o
+*.os
+*.obj
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+*.framework
+compile_commands.json
+addons/objectivec-gdextension/LICENSE
+
+# Test project files
+.godot/
+test/godot
+app_userdata/
+test/build
+test/export_presets.cfg
+
+# macOS
+*.DS_Store

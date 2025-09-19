@@ -1,0 +1,58 @@
+#!/bin/env python
+from SCons.Script import Environment
+from os import path
+import sys
+
+env = Environment()
+
+# Set the target path and name.
+target_path = "demo/bin/"
+target_name = "libgdexample"
+
+# Set the compiler and flags.
+env.Append(CPPPATH=["src"])  # Add the src folder to the include path.
+env.Append(CFLAGS=["-O0", "-g"])  # Make it a debug build.
+
+# Use Clang on macOS.
+if sys.platform == "darwin":
+    env["CC"] = "clang"
+
+if env["platform"] in ["macos", "ios"]:
+	# Compile flags
+    env.Append(LINKFLAGS="-framework Foundation")
+
+    # Compile with debugging symbols
+    if ARGUMENTS.get("debugging_symbols") == 'true':
+        if "-O2" in env["CCFLAGS"]:
+            env["CCFLAGS"].remove("-O2")
+        env.Append(CCFLAGS=["-g", "-O0"])
+
+    # Setup variant build dir for each setup
+    def remove_prefix(s, prefix):
+        return s[len(prefix):] if s.startswith(prefix) else s
+
+    build_dir = "build/{}".format(remove_prefix(env["suffix"], "."))
+    VariantDir(build_dir, 'src', duplicate=False)
+
+    # Build Objective-C GDExtension
+    source_directories = ["."]
+    sources = [
+        Glob("{}/{}/*.cpp".format(build_dir, directory)) + Glob("{}/{}/*.mm".format(build_dir, directory))
+        for directory in source_directories
+    ]
+    library = env.SharedLibrary(
+        "addons/godot_arkit/build/libobjcgdextension{}{}".format(env["suffix"], env["SHLIBSUFFIX"]),
+        source=sources,
+    )
+else:
+	# Add all C files in "src" folder as sources.
+	sources = env.Glob("src/*.c")
+
+	# Create a shared library.
+	library = env.SharedLibrary(
+	    target=path.join(target_path, target_name),
+	    source=sources,
+	)
+
+# Set the library as the default target.
+env.Default(library)
