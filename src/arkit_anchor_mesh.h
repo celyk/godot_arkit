@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  arkit_session_delegate.mm                                            */
+/*  arkit_interface.h                                                    */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -28,29 +28,36 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#include "arkit_session_delegate.h"
-#include "arkit_interface.h"
+#ifndef ARKIT_ANCHOR_MESH_H
+#define ARKIT_ANCHOR_MESH_H
 
-@implementation ARKitSessionDelegate
+#include <godot_cpp/classes/os.hpp>
+#include <godot_cpp/core/version.hpp>
+#include <godot_cpp/classes/surface_tool.hpp>
 
-@synthesize arkit_interface;
+#include <godot_cpp/classes/xr_interface.hpp>
+#include <godot_cpp/classes/xr_positional_tracker.hpp>
 
-- (void)session:(ARSession *)session didAddAnchors:(NSArray<ARAnchor *> *)anchors {
-	for (ARAnchor *anchor in anchors) {
-		arkit_interface->_add_or_update_anchor(anchor);
-	}
-}
+#include <godot_cpp/core/mutex_lock.hpp>
 
-- (void)session:(ARSession *)session didRemoveAnchors:(NSArray<ARAnchor *> *)anchors {
-	for (ARAnchor *anchor in anchors) {
-		arkit_interface->_remove_anchor(anchor);
-	}
-}
+using namespace godot;
 
-- (void)session:(ARSession *)session didUpdateAnchors:(NSArray<ARAnchor *> *)anchors {
-	for (ARAnchor *anchor in anchors) {
-		arkit_interface->_add_or_update_anchor(anchor);
-	}
-}
+class ARKitAnchorMesh : public XRPositionalTracker {
+	GDCLASS(ARKitAnchorMesh, XRPositionalTracker);
+	_THREAD_SAFE_CLASS_
 
-@end
+private:
+	Ref<Mesh> mesh;
+
+protected:
+	static void _bind_methods();
+
+public:
+	void set_mesh(Ref<Mesh> mesh);
+	Ref<Mesh> get_mesh() const;
+
+	ARKitAnchorMesh();
+	~ARKitAnchorMesh();
+};
+
+#endif /* !ARKIT_ANCHOR_MESH_H */

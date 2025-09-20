@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  arkit_session_delegate.mm                                            */
+/*  arkit_module.cpp                                                     */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -28,29 +28,32 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#include "arkit_session_delegate.h"
+#include "arkit_module.h"
+
 #include "arkit_interface.h"
+#include <godot_cpp/core/version.hpp>
 
-@implementation ARKitSessionDelegate
+#define VERSION_MAJOR GODOT_VERSION_MAJOR
+#define VERSION_MINOR GODOT_VERSION_MINOR
 
-@synthesize arkit_interface;
+#include <godot_cpp/classes/class_db_singleton.hpp>
 
-- (void)session:(ARSession *)session didAddAnchors:(NSArray<ARAnchor *> *)anchors {
-	for (ARAnchor *anchor in anchors) {
-		arkit_interface->_add_or_update_anchor(anchor);
-	}
+void register_arkit_types() {
+	// does it make sense to register the class?
+
+	Ref<ARKitInterface> arkit_interface;
+
+#if VERSION_MAJOR >= 4
+	arkit_interface.instantiate();
+	XRServer::get_singleton()->add_interface(arkit_interface);
+	//GDREGISTER_CLASS(ARKitAnchorMesh);
+	ClassDB::register_class<ARKitAnchorMesh>();
+#else
+	arkit_interface.instance();
+	ARVRServer::get_singleton()->add_interface(arkit_interface);
+#endif
 }
 
-- (void)session:(ARSession *)session didRemoveAnchors:(NSArray<ARAnchor *> *)anchors {
-	for (ARAnchor *anchor in anchors) {
-		arkit_interface->_remove_anchor(anchor);
-	}
+void unregister_arkit_types() {
+	// should clean itself up nicely :)
 }
-
-- (void)session:(ARSession *)session didUpdateAnchors:(NSArray<ARAnchor *> *)anchors {
-	for (ARAnchor *anchor in anchors) {
-		arkit_interface->_add_or_update_anchor(anchor);
-	}
-}
-
-@end

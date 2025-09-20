@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  arkit_session_delegate.mm                                            */
+/*  arkit_module.h                                                       */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -28,29 +28,5 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#include "arkit_session_delegate.h"
-#include "arkit_interface.h"
-
-@implementation ARKitSessionDelegate
-
-@synthesize arkit_interface;
-
-- (void)session:(ARSession *)session didAddAnchors:(NSArray<ARAnchor *> *)anchors {
-	for (ARAnchor *anchor in anchors) {
-		arkit_interface->_add_or_update_anchor(anchor);
-	}
-}
-
-- (void)session:(ARSession *)session didRemoveAnchors:(NSArray<ARAnchor *> *)anchors {
-	for (ARAnchor *anchor in anchors) {
-		arkit_interface->_remove_anchor(anchor);
-	}
-}
-
-- (void)session:(ARSession *)session didUpdateAnchors:(NSArray<ARAnchor *> *)anchors {
-	for (ARAnchor *anchor in anchors) {
-		arkit_interface->_add_or_update_anchor(anchor);
-	}
-}
-
-@end
+void register_arkit_types();
+void unregister_arkit_types();

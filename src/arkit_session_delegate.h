@@ -34,13 +34,13 @@
 #import <ARKit/ARKit.h>
 #import <UIKit/UIKit.h>
 
-//class ARKitInterface;
+class ARKitInterface;
 
 @interface ARKitSessionDelegate : NSObject <ARSessionDelegate> {
-	//ARKitInterface *arkit_interface;
+	ARKitInterface *arkit_interface;
 }
 
-//@property(nonatomic) ARKitInterface *arkit_interface;
+@property(nonatomic) ARKitInterface *arkit_interface;
 
 - (void)session:(ARSession *)session didAddAnchors:(NSArray<ARAnchor *> *)anchors API_AVAILABLE(ios(11.0));
 - (void)session:(ARSession *)session didRemoveAnchors:(NSArray<ARAnchor *> *)anchors API_AVAILABLE(ios(11.0));

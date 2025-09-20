@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  arkit_session_delegate.mm                                            */
+/*  arkit_interface.h                                                    */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -28,29 +28,49 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#include "arkit_session_delegate.h"
-#include "arkit_interface.h"
+#include <godot_cpp/classes/os.hpp>
+#include <godot_cpp/core/version.hpp>
+#include <godot_cpp/classes/surface_tool.hpp>
 
-@implementation ARKitSessionDelegate
+#include <godot_cpp/classes/input.hpp>
+//#include <godot_cpp/servers/rendering/rendering_server_globals.hpp>
 
-@synthesize arkit_interface;
+#define GODOT_FOCUS_IN_NOTIFICATION DisplayServer::WINDOW_EVENT_FOCUS_IN
+#define GODOT_FOCUS_OUT_NOTIFICATION DisplayServer::WINDOW_EVENT_FOCUS_OUT
 
-- (void)session:(ARSession *)session didAddAnchors:(NSArray<ARAnchor *> *)anchors {
-	for (ARAnchor *anchor in anchors) {
-		arkit_interface->_add_or_update_anchor(anchor);
-	}
+#define GODOT_MAKE_THREAD_SAFE ;
+
+#define GODOT_AR_STATE_NOT_TRACKING XRInterface::XR_NOT_TRACKING
+#define GODOT_AR_STATE_NORMAL_TRACKING XRInterface::XR_NORMAL_TRACKING
+#define GODOT_AR_STATE_EXCESSIVE_MOTION XRInterface::XR_EXCESSIVE_MOTION
+#define GODOT_AR_STATE_INSUFFICIENT_FEATURES XRInterface::XR_INSUFFICIENT_FEATURES
+#define GODOT_AR_STATE_UNKNOWN_TRACKING XRInterface::XR_UNKNOWN_TRACKING
+
+#import <ARKit/ARKit.h>
+#import <UIKit/UIKit.h>
+
+#include <dlfcn.h>
+
+#include "arkit_anchor_mesh.h"
+
+void ARKitAnchorMesh::set_mesh(Ref<Mesh> p_mesh) {
+	mesh = p_mesh;
 }
 
-- (void)session:(ARSession *)session didRemoveAnchors:(NSArray<ARAnchor *> *)anchors {
-	for (ARAnchor *anchor in anchors) {
-		arkit_interface->_remove_anchor(anchor);
-	}
+Ref<Mesh> ARKitAnchorMesh::get_mesh() const {
+	return mesh;
 }
 
-- (void)session:(ARSession *)session didUpdateAnchors:(NSArray<ARAnchor *> *)anchors {
-	for (ARAnchor *anchor in anchors) {
-		arkit_interface->_add_or_update_anchor(anchor);
-	}
+void ARKitAnchorMesh::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_mesh", "mesh"), &ARKitAnchorMesh::set_mesh);
+	ClassDB::bind_method(D_METHOD("get_mesh"), &ARKitAnchorMesh::get_mesh);
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "mesh", PROPERTY_HINT_RESOURCE_TYPE, "Mesh"), "set_mesh", "get_mesh");
 }
 
-@end
+ARKitAnchorMesh::ARKitAnchorMesh(){
+	//mesh = NULL;
+}
+
+ARKitAnchorMesh::~ARKitAnchorMesh(){
+
+}
