@@ -45,7 +45,8 @@
 typedef XRInterfaceExtension GodotBaseARInterface;
 typedef ARKitAnchorMesh GodotARTracker;
 
-typedef Vector<uint8_t> GodotUInt8Vector;
+//typedef Vector<uint8_t> GodotUInt8Vector;
+typedef PackedByteArray GodotUInt8Vector;
 
 #define GODOT_ARKIT_OVERRIDE override
 //#define GODOT_ARKIT_OVERRIDE

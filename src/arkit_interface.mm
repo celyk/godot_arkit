@@ -39,6 +39,7 @@
 #include <godot_cpp/classes/input.hpp>
 //#include <godot_cpp/servers/rendering/rendering_server_globals.h>
 #include <godot_cpp/classes/display_server.hpp>
+#include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/image.hpp>
 
 #define GODOT_FOCUS_IN_NOTIFICATION DisplayServer::WINDOW_EVENT_FOCUS_IN
@@ -688,7 +689,12 @@ void ARKitInterface::_process() {
 
 #if VERSION_MAJOR >= 4
 							img[0].instantiate();
-							//img[0]->initialize_data(new_width, new_height, 0, Image::FORMAT_R8, img_data[0]);
+
+							PackedByteArray pba_adapter;
+							
+							//for(int i=0; i<img_data[0])
+
+							img[0]->set_data(new_width, new_height, 0, Image::FORMAT_R8, img_data[0]);
 #else
 							img[0].instance();
 							img[0]->create(new_width, new_height, 0, Image::FORMAT_R8, img_data[0]);
@@ -737,7 +743,7 @@ void ARKitInterface::_process() {
 
 #if VERSION_MAJOR >= 4
 							img[1].instantiate();
-							//img[1]->initialize_data(new_width, new_height, 0, Image::FORMAT_RG8, img_data[1]);
+							img[1]->set_data(new_width, new_height, 0, Image::FORMAT_RG8, img_data[1]);
 #else
 							img[1].instance();
 							img[1]->create(new_width, new_height, 0, Image::FORMAT_RG8, img_data[1]);
@@ -746,7 +752,9 @@ void ARKitInterface::_process() {
 
 						// set our texture...
 #if (VERSION_MAJOR == 4 && VERSION_MINOR >= 4) || VERSION_MAJOR > 4
-						//feed->set_ycbcr_image(img[0]);
+						// Workaround...
+						feed->set_rgb_image(img[0]);
+						feed->set_ycbcr_image(img[1]);
 #else
 						//feed->set_YCbCr_imgs(img[0], img[1]);
 #endif
@@ -1002,5 +1010,46 @@ ARKitInterface::~ARKitInterface() {
 	// and make sure we cleanup if we haven't already
 	if (_is_initialized()) {
 		_uninitialize();
+	}
+}
+
+// Because set_ycbcr_images is not exposed to GDExtension, define it here.
+void set_ycbcr_images(Ref<CameraFeed> feed, const Ref<Image> &p_y_img, const Ref<Image> &p_cbcr_img) {
+	ERR_FAIL_COND(p_y_img.is_null());
+	ERR_FAIL_COND(p_cbcr_img.is_null());
+	if (feed->is_active()) {
+		///@TODO investigate whether we can use thirdparty/misc/yuv2rgb.h here to convert our YUV data to RGB, our shader approach is potentially faster though..
+		// Wondering about including that into multiple projects, may cause issues.
+		// That said, if we convert to RGB, we could enable using texture resources again...
+
+		int new_y_width = p_y_img->get_width();
+		int new_y_height = p_y_img->get_height();
+
+		/*if ((feed->base_width != new_y_width) || (feed->base_height != new_y_height)) {
+			// We're assuming here that our camera image doesn't change around formats etc, allocate the whole lot...
+			base_width = new_y_width;
+			base_height = new_y_height;
+			{
+				RID new_texture = RenderingServer::get_singleton()->texture_2d_create(p_y_img);
+				RenderingServer::get_singleton()->texture_replace(feed->texture[CameraServer::FEED_Y_IMAGE], new_texture);
+			}
+			{
+				RID new_texture = RenderingServer::get_singleton()->texture_2d_create(p_cbcr_img);
+				RenderingServer::get_singleton()->texture_replace(feed->texture[CameraServer::FEED_CBCR_IMAGE], new_texture);
+			}
+
+			// Defer `format_changed` signals to ensure they are emitted on Godot's main thread.
+			// This also makes sure the datatype of the feed is updated before the emission.
+			feed->call_deferred("emit_signal", format_changed_signal_name);
+		} else */
+		{
+			//RenderingServer::get_singleton()->texture_2d_update(feed->get_texture_tex_id(CameraServer::FEED_Y_IMAGE), p_y_img, 0);
+			//RenderingServer::get_singleton()->texture_2d_update(feed->get_texture_tex_id(CameraServer::FEED_CBCR_IMAGE), p_cbcr_img, 0);
+		}
+
+		//feed->datatype = CameraFeed::FEED_YCBCR_SEP;
+		// Most of the time the pixel data of camera devices comes from threads outside Godot.
+		// Defer `frame_changed` signals to ensure they are emitted on Godot's main thread.
+		//feed->call_deferred("emit_signal", frame_changed_signal_name);
 	}
 }
