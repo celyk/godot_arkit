@@ -1,7 +1,4 @@
-#!/bin/env python
-from SCons.Script import Environment
-from os import path
-import sys
+import os
 
 env = SConscript("godot-cpp/SConstruct").Clone()
 
@@ -10,27 +7,9 @@ env = SConscript("godot-cpp/SConstruct").Clone()
 #compiledb = env.CompilationDatabase("compile_commands.json")
 #env.Alias("compiledb", compiledb)
 
-import os
-env.PrependENVPath("PATH", os.getenv("PATH"))
-
-#opts = Variables(customs, ARGUMENTS)
-
-# Set the target path and name.
-target_path = "demo/bin/"
-target_name = "libgdexample"
-
-# Set the compiler and flags.
-env.Append(CPPPATH=["src"])  # Add the src folder to the include path.
-env.Append(CFLAGS=["-O0", "-g"])  # Make it a debug build.
-
-if sys.platform == "darwin":
-    env["CC"] = "clang"
-
-if ARGUMENTS["platform"] in ["macos", "ios"]:
-	# Compile flags
+if env["platform"] in ["macos", "ios"]:
+    # Compile flags
     env.Append(LINKFLAGS="-framework Foundation")
-    env.Append(LINKFLAGS="-framework ARKit")
-    #env.Append(LINKFLAGS="-framework UIKit")
 
     # Compile with debugging symbols
     if ARGUMENTS.get("debugging_symbols") == 'true':
@@ -42,7 +21,7 @@ if ARGUMENTS["platform"] in ["macos", "ios"]:
     def remove_prefix(s, prefix):
         return s[len(prefix):] if s.startswith(prefix) else s
 
-    build_dir = "build"
+    build_dir = "build/{}".format(remove_prefix(env["suffix"], "."))
     VariantDir(build_dir, 'src', duplicate=False)
 
     # Build Objective-C GDExtension
@@ -56,14 +35,9 @@ if ARGUMENTS["platform"] in ["macos", "ios"]:
         source=sources,
     )
 else:
-	# Add all C files in "src" folder as sources.
-	sources = env.Glob("src/*.c")
-
-	# Create a shared library.
-	library = env.SharedLibrary(
-	    target=path.join(target_path, target_name),
-	    source=sources,
-	)
-
-# Set the library as the default target.
-env.Default(library)
+    '''dummy_env = Environment(CPPPATH="godot-cpp/gdextension")
+    library = dummy_env.SharedLibrary(
+        "addons/godot_arkit/build/libobjcgdextension{}{}".format(env["suffix"], env["SHLIBSUFFIX"]),
+        source="src/dummy_main.c",
+    )'''
+Default(library)
