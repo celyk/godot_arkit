@@ -20,27 +20,22 @@
  * SOFTWARE.
  */
 
-#include "ObjectiveCAPI.hpp"
+#include "arkit_module.h"
 
 #include <godot_cpp/godot.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/engine.hpp>
 
-using namespace godot;
+#include <gdextension_interface.h>
 
-namespace objcgdextension {}
-using namespace objcgdextension;
+using namespace godot;
 
 static void initialize(ModuleInitializationLevel level) {
 	if (level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
 
-	/*ClassDB::register_abstract_class<ObjectiveCObject>();
-	ClassDB::register_abstract_class<ObjectiveCClass>();
-	ClassDB::register_abstract_class<ObjectiveCAPI>();
-	ClassDB::register_abstract_class<ObjectiveCPointer>();*/
-	Engine::get_singleton()->register_singleton("ObjectiveC", memnew(ObjectiveCAPI));
+	register_arkit_types();
 }
 
 static void terminate(ModuleInitializationLevel level) {
@@ -48,11 +43,11 @@ static void terminate(ModuleInitializationLevel level) {
 		return;
 	}
 
-	//Engine::get_singleton()->unregister_singleton("ObjectiveC");
+	unregister_arkit_types();
 }
 
 extern "C" GDExtensionBool objcgdextension_entrypoint(
-	const GDExtensionInterfaceGetProcAddress p_getprocaccess,
+	GDExtensionInterfaceGetProcAddress p_getprocaccess,
 	GDExtensionClassLibraryPtr p_library,
 	GDExtensionInitialization *r_initialization
 ) {

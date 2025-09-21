@@ -10,6 +10,12 @@ env = SConscript("godot-cpp/SConstruct").Clone()
 if env["platform"] in ["macos", "ios"]:
     # Compile flags
     env.Append(LINKFLAGS="-framework Foundation")
+    env.Append(LINKFLAGS="-framework UIKit")
+    env.Append(LINKFLAGS="-framework ARKit")
+    env.Append(LINKFLAGS="-framework AVFoundation")
+    env.Append(LINKFLAGS="-framework CoreGraphics")
+    env.Append(LINKFLAGS="-framework CoreMotion")
+    env.Append(LINKFLAGS="-framework CoreVideo")
 
     # Compile with debugging symbols
     if ARGUMENTS.get("debugging_symbols") == 'true':

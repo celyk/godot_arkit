@@ -139,11 +139,11 @@ void ARKitInterface::stop_session() {
 	}
 }
 
-bool ARKitInterface::get_anchor_detection_is_enabled() const {
+bool ARKitInterface::_get_anchor_detection_is_enabled() const {
 	return plane_detection_is_enabled;
 }
 
-void ARKitInterface::set_anchor_detection_is_enabled(bool p_enable) {
+void ARKitInterface::_set_anchor_detection_is_enabled(bool p_enable) {
 	if (plane_detection_is_enabled != p_enable) {
 		plane_detection_is_enabled = p_enable;
 
@@ -154,7 +154,7 @@ void ARKitInterface::set_anchor_detection_is_enabled(bool p_enable) {
 	}
 }
 
-int ARKitInterface::get_camera_feed_id() {
+int32_t ARKitInterface::_get_camera_feed_id() const {
 	if (feed.is_null()) {
 		return 0;
 	} else {
@@ -189,15 +189,15 @@ real_t ARKitInterface::get_exposure_offset() const {
 	return exposure_offset;
 }
 
-StringName ARKitInterface::get_name() const {
+StringName ARKitInterface::_get_name() const {
 	return "ARKit";
 }
 
-uint32_t ARKitInterface::get_capabilities() const {
+uint32_t ARKitInterface::_get_capabilities() const {
 #if VERSION_MAJOR >= 4
-	return ARKitInterface::XR_MONO + ARKitInterface::XR_AR;
+	return XRInterface::XR_MONO | XRInterface::XR_AR;
 #else
-	return ARKitInterface::ARVR_MONO + ARKitInterface::ARVR_AR;
+	return ARKitInterface::ARVR_MONO | ARKitInterface::ARVR_AR;
 #endif
 }
 
@@ -281,11 +281,11 @@ bool ARKitInterface::is_stereo() {
 }
 #endif
 
-bool ARKitInterface::is_initialized() const {
+bool ARKitInterface::_is_initialized() const {
 	return initialized;
 }
 
-bool ARKitInterface::initialize() {
+bool ARKitInterface::_initialize() {
 #if VERSION_MAJOR >= 4
 	XRServer *ar_server = XRServer::get_singleton();
 #else
@@ -356,7 +356,7 @@ bool ARKitInterface::initialize() {
 	}
 }
 
-void ARKitInterface::uninitialize() {
+void ARKitInterface::_uninitialize() {
 	if (initialized) {
 #if VERSION_MAJOR >= 4
 		XRServer *ar_server = XRServer::get_singleton();
@@ -393,12 +393,12 @@ void ARKitInterface::uninitialize() {
 	}
 }
 
-Dictionary ARKitInterface::get_system_info() {
+/*Dictionary ARKitInterface::_get_system_info() {
 	Dictionary dict;
 	return dict;
-}
+}*/
 
-Size2 ARKitInterface::get_render_target_size() {
+Size2 ARKitInterface::_get_render_target_size() {
 	GODOT_MAKE_THREAD_SAFE
 
 #if VERSION_MAJOR >= 4
@@ -410,15 +410,15 @@ Size2 ARKitInterface::get_render_target_size() {
 	return target_size;
 }
 
-uint32_t ARKitInterface::get_view_count() {
+uint32_t ARKitInterface::_get_view_count() {
 	return 1;
 }
 
-Transform3D ARKitInterface::get_camera_transform() {
+Transform3D ARKitInterface::_get_camera_transform() {
 	return transform;
 }
 
-Transform3D ARKitInterface::get_transform_for_view(uint32_t p_view, const Transform3D &p_cam_transform) {
+Transform3D ARKitInterface::_get_transform_for_view(uint32_t p_view, const Transform3D &p_cam_transform) {
 	GODOT_MAKE_THREAD_SAFE
 
 	Transform3D transform_for_view;
@@ -447,57 +447,76 @@ Transform3D ARKitInterface::get_transform_for_view(uint32_t p_view, const Transf
 	return transform_for_view;
 }
 
-Projection ARKitInterface::get_projection_for_view(uint32_t p_view, double p_aspect, double p_z_near, double p_z_far) {
+PackedFloat64Array ARKitInterface::_get_projection_for_view(uint32_t p_view, double p_aspect, double p_z_near, double p_z_far) {
 	// Remember our near and far, it will be used in process when we obtain our projection from our ARKit session.
 	z_near = p_z_near;
 	z_far = p_z_far;
 
-	return projection;
+	PackedFloat64Array projection_data;
+	projection_data.resize(16);
+
+	for(int i=0; i<4; i++){
+		for(int j=0; j<4; j++){
+			//projection_data[i + j*4] = projection.columns[i][j];
+			projection_data.set(i + j*4, projection.columns[i][j]);
+		}
+	}
+
+/*
+	projection.columns[0][0] = m44.columns[0][0];
+	projection.columns[1][0] = m44.columns[1][0];
+	projection.columns[2][0] = m44.columns[2][0];
+	projection.columns[3][0] = m44.columns[3][0];
+	projection.columns[0][1] = m44.columns[0][1];
+	projection.columns[1][1] = m44.columns[1][1];
+	projection.columns[2][1] = m44.columns[2][1];
+	projection.columns[3][1] = m44.columns[3][1];
+	projection.columns[0][2] = m44.columns[0][2];
+	projection.columns[1][2] = m44.columns[1][2];
+	projection.columns[2][2] = m44.columns[2][2];
+	projection.columns[3][2] = m44.columns[3][2];
+	projection.columns[0][3] = m44.columns[0][3];
+	projection.columns[1][3] = m44.columns[1][3];
+	projection.columns[2][3] = m44.columns[2][3];
+	projection.columns[3][3] = m44.columns[3][3];
+*/
+
+	return projection_data;
 }
 
-Vector<BlitToScreen> ARKitInterface::post_draw_viewport(RID p_render_target, const Rect2 &p_screen_rect) {
-	GODOT_MAKE_THREAD_SAFE
-
-	Vector<BlitToScreen> blit_to_screen;
-
-	// We must have a valid render target
-	ERR_FAIL_COND_V(!p_render_target.is_valid(), blit_to_screen);
-
-	// Because we are rendering to our device we must use our main viewport!
-	ERR_FAIL_COND_V(p_screen_rect == Rect2(), blit_to_screen);
-
+void ARKitInterface::_post_draw_viewport(const RID &p_render_target, const Rect2 &p_screen_rect) {
 	Rect2 src_rect(0.0f, 0.0f, 1.0f, 1.0f);
 	Rect2 dst_rect = p_screen_rect;
-	//Vector2 eye_center(((-intraocular_dist / 2.0) + (display_width / 4.0)) / (display_width / 2.0), 0.0);
 
-	//add_blit(p_render_target, src_rect, dst_rect);
+	float intraocular_dist = 0.0;
+	float display_width = 1.0;
+	float oversample = 1.0;
+	float aspect = p_screen_rect.size.aspect();
+	float k1 = 1.0;
+	float k2 = 1.0;
+
+	bool use_layer = false;
+	bool apply_lens_distortion = false;
+
+	// halve our width
+	/*Vector2 size = dst_rect.get_size();
+	size.x = size.x * 0.5;
+	dst_rect.size = size;*/
+
+	Vector2 eye_center(((-intraocular_dist / 2.0) + (display_width / 4.0)) / (display_width / 2.0), 0.0);
+	eye_center = Vector2();
 	
-	if (p_screen_rect != Rect2()) {
-		BlitToScreen blit;
+	//void add_blit(render_target: RID, src_rect: Rect2, dst_rect: Rect2i, use_layer: bool, layer: int, apply_lens_distortion: bool, eye_center: Vector2, k1: float, k2: float, upscale: float, aspect_ratio: float)
+	add_blit(p_render_target, src_rect, dst_rect, use_layer, 0, apply_lens_distortion, eye_center, k1, k2, oversample, aspect);
 
-		blit.render_target = p_render_target;
-		blit.multi_view.use_layer = true;
-		blit.multi_view.layer = 0;
-		blit.lens_distortion.apply = false;
+	// move rect
+	/*Vector2 pos = dst_rect.get_position();
+	pos.x = size.x;
+	dst_rect.position = pos;
 
-		Size2 render_size = get_render_target_size();
-		Rect2 dst_rect = p_screen_rect;
-		float new_height = dst_rect.size.x * (render_size.y / render_size.x);
-		if (new_height > dst_rect.size.y) {
-			dst_rect.position.y = (0.5 * dst_rect.size.y) - (0.5 * new_height);
-			dst_rect.size.y = new_height;
-		} else {
-			float new_width = dst_rect.size.y * (render_size.x / render_size.y);
-
-			dst_rect.position.x = (0.5 * dst_rect.size.x) - (0.5 * new_width);
-			dst_rect.size.x = new_width;
-		}
-
-		blit.dst_rect = dst_rect;
-		blit_to_screen.push_back(blit);
-	}
-	
-	return blit_to_screen;
+	eye_center.x = ((intraocular_dist / 2.0) - (display_width / 4.0)) / (display_width / 2.0);
+	*/
+	//add_blit(p_render_target, src_rect, dst_rect, true, 1, apply_lens_distortion, eye_center, k1, k2, oversample, aspect);
 }
 
 GodotARTracker *ARKitInterface::get_anchor_for_uuid(const unsigned char *p_uuid) {
@@ -593,7 +612,7 @@ void ARKitInterface::remove_all_anchors() {
 	}
 }
 
-void ARKitInterface::process() {
+void ARKitInterface::_process() {
 	GODOT_MAKE_THREAD_SAFE
 
 	if (@available(iOS 11.0, *)) {
@@ -746,7 +765,7 @@ void ARKitInterface::process() {
 
 						// set our texture...
 #if (VERSION_MAJOR == 4 && VERSION_MINOR >= 4) || VERSION_MAJOR > 4
-						//feed->set_ycbcr_images(img[0], img[1]);
+						//feed->set_ycbcr_image(img[0]);
 #else
 						//feed->set_YCbCr_imgs(img[0], img[1]);
 #endif
@@ -1000,7 +1019,7 @@ ARKitInterface::~ARKitInterface() {
 	remove_all_anchors();
 
 	// and make sure we cleanup if we haven't already
-	if (is_initialized()) {
-		uninitialize();
+	if (_is_initialized()) {
+		_uninitialize();
 	}
 }
