@@ -448,43 +448,24 @@ Transform3D ARKitInterface::_get_transform_for_view(uint32_t p_view, const Trans
 }
 
 PackedFloat64Array ARKitInterface::_get_projection_for_view(uint32_t p_view, double p_aspect, double p_z_near, double p_z_far) {
+	PackedFloat64Array arr;
+	arr.resize(16); // 4x4 matrix
+
 	// Remember our near and far, it will be used in process when we obtain our projection from our ARKit session.
 	z_near = p_z_near;
 	z_far = p_z_far;
 
-	PackedFloat64Array projection_data;
-	projection_data.resize(16);
-
-	for(int i=0; i<4; i++){
-		for(int j=0; j<4; j++){
-			//projection_data[i + j*4] = projection.columns[i][j];
-			projection_data.set(i + j*4, projection.columns[i][j]);
-		}
+	real_t *p = (real_t *)&projection.columns;
+	for (int i = 0; i < 16; i++) {
+		arr[i] = p[i];
 	}
 
-/*
-	projection.columns[0][0] = m44.columns[0][0];
-	projection.columns[1][0] = m44.columns[1][0];
-	projection.columns[2][0] = m44.columns[2][0];
-	projection.columns[3][0] = m44.columns[3][0];
-	projection.columns[0][1] = m44.columns[0][1];
-	projection.columns[1][1] = m44.columns[1][1];
-	projection.columns[2][1] = m44.columns[2][1];
-	projection.columns[3][1] = m44.columns[3][1];
-	projection.columns[0][2] = m44.columns[0][2];
-	projection.columns[1][2] = m44.columns[1][2];
-	projection.columns[2][2] = m44.columns[2][2];
-	projection.columns[3][2] = m44.columns[3][2];
-	projection.columns[0][3] = m44.columns[0][3];
-	projection.columns[1][3] = m44.columns[1][3];
-	projection.columns[2][3] = m44.columns[2][3];
-	projection.columns[3][3] = m44.columns[3][3];
-*/
-
-	return projection_data;
+	return arr;
 }
 
 void ARKitInterface::_post_draw_viewport(const RID &p_render_target, const Rect2 &p_screen_rect) {
+	GODOT_MAKE_THREAD_SAFE
+
 	Rect2 src_rect(0.0f, 0.0f, 1.0f, 1.0f);
 	Rect2 dst_rect = p_screen_rect;
 
@@ -492,7 +473,7 @@ void ARKitInterface::_post_draw_viewport(const RID &p_render_target, const Rect2
 	float display_width = 1.0;
 	float oversample = 1.0;
 	float aspect = p_screen_rect.size.aspect();
-	float k1 = 1.0;
+	float k1 = 0.1;
 	float k2 = 1.0;
 
 	bool use_layer = false;
@@ -505,7 +486,7 @@ void ARKitInterface::_post_draw_viewport(const RID &p_render_target, const Rect2
 
 	Vector2 eye_center(((-intraocular_dist / 2.0) + (display_width / 4.0)) / (display_width / 2.0), 0.0);
 	eye_center = Vector2();
-	
+
 	//void add_blit(render_target: RID, src_rect: Rect2, dst_rect: Rect2i, use_layer: bool, layer: int, apply_lens_distortion: bool, eye_center: Vector2, k1: float, k2: float, upscale: float, aspect_ratio: float)
 	add_blit(p_render_target, src_rect, dst_rect, use_layer, 0, apply_lens_distortion, eye_center, k1, k2, oversample, aspect);
 
