@@ -942,23 +942,15 @@ void ARKitInterface::_add_or_update_anchor(GodotARAnchor *p_anchor) {
 					}
 
 					surftool->generate_normals();
-#if VERSION_MAJOR >= 4
-#else
+
 					tracker->set_mesh(surftool->commit());
-#endif
 				} else {
 					Ref<Mesh> nomesh;
-#if VERSION_MAJOR >= 4
-#else
 					tracker->set_mesh(nomesh);
-#endif
 				}
 			} else {
 				Ref<Mesh> nomesh;
-#if VERSION_MAJOR >= 4
-#else
 				tracker->set_mesh(nomesh);
-#endif
 			}
 
 			// Note, this also contains a scale factor which gives us an idea of the size of the anchor
