@@ -39,15 +39,9 @@
 #include <godot_cpp/classes/xr_positional_tracker.hpp>
 #include "arkit_anchor_mesh.h"
 
-typedef XRInterfaceExtension GodotBaseARInterface;
-typedef ARKitAnchorMesh GodotARTracker;
-
-//typedef Vector<uint8_t> GodotUInt8Vector;
 typedef PackedByteArray GodotUInt8Vector;
 
 #define GODOT_ARKIT_OVERRIDE override
-//#define GODOT_ARKIT_OVERRIDE
-
 
 #include <godot_cpp/classes/camera_feed.hpp>
 
@@ -91,7 +85,6 @@ struct BlitToScreen {
 	} lens_distortion;
 };
 
-
 class ARKitInterface : public XRInterfaceExtension {
 	GDCLASS(ARKitInterface, XRInterfaceExtension);
 
@@ -117,7 +110,7 @@ private:
 	XRInterface::TrackingStatus tracking_state;
 
 	struct anchor_map {
-		Ref<GodotARTracker> tracker;
+		Ref<ARKitAnchorMesh> tracker;
 		unsigned char uuid[16];
 	};
 
@@ -125,7 +118,7 @@ private:
 	unsigned int num_anchors;
 	unsigned int max_anchors;
 	anchor_map *anchors;
-	Ref<GodotARTracker> get_anchor_for_uuid(const unsigned char *p_uuid);
+	Ref<ARKitAnchorMesh> get_anchor_for_uuid(const unsigned char *p_uuid);
 	void remove_anchor_for_uuid(const unsigned char *p_uuid);
 	void remove_all_anchors();
 

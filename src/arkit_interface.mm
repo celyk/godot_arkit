@@ -451,14 +451,12 @@ void ARKitInterface::_post_draw_viewport(const RID &p_render_target, const Rect2
 	//add_blit(p_render_target, src_rect, dst_rect, true, 1, apply_lens_distortion, eye_center, k1, k2, oversample, aspect);
 }
 
-Ref<GodotARTracker> ARKitInterface::get_anchor_for_uuid(const unsigned char *p_uuid) {
+Ref<ARKitAnchorMesh> ARKitInterface::get_anchor_for_uuid(const unsigned char *p_uuid) {
 	if (anchors == NULL) {
 		num_anchors = 0;
 		max_anchors = 10;
 		anchors = (anchor_map *)malloc(sizeof(anchor_map) * max_anchors);
 	}
-
-	print_line("get_anchor_for_uuid 0");
 
 	ERR_FAIL_NULL_V(anchors, NULL);
 
@@ -468,20 +466,14 @@ Ref<GodotARTracker> ARKitInterface::get_anchor_for_uuid(const unsigned char *p_u
 		}
 	}
 
-	print_line("get_anchor_for_uuid 1");
-
 	if (num_anchors + 1 == max_anchors) {
 		max_anchors += 10;
 		anchors = (anchor_map *)realloc(anchors, sizeof(anchor_map) * max_anchors);
 		ERR_FAIL_NULL_V(anchors, NULL);
 	}
 
-	print_line("get_anchor_for_uuid 2 I'm ready");
-
 	Ref<ARKitAnchorMesh> new_tracker; // = memnew(ARKitAnchorMesh);
 	new_tracker.instantiate();
-	
-	print_line("get_anchor_for_uuid 3");
 	
 	new_tracker->set_tracker_type(XRServer::TRACKER_ANCHOR);
 
@@ -789,11 +781,7 @@ void ARKitInterface::_add_or_update_anchor(GodotARAnchor *p_anchor) {
 		unsigned char uuid[16];
 		[anchor.identifier getUUIDBytes:uuid];
 
-		print_line("About to add an anchor");
-
 		Ref<ARKitAnchorMesh> tracker = get_anchor_for_uuid(uuid);
-
-		print_line("get_anchor_for_uuid was called");
 
 		if (tracker != NULL) {
 			// lets update our mesh! (using Arjens code as is for now)
@@ -801,8 +789,6 @@ void ARKitInterface::_add_or_update_anchor(GodotARAnchor *p_anchor) {
 
 			// can we safely cast this?
 			ARPlaneAnchor *planeAnchor = (ARPlaneAnchor *)anchor;
-
-			print_line("can we safely cast this?");
 
 			if (@available(iOS 11.3, *)) {
 				if (planeAnchor.geometry.triangleCount > 0) {
