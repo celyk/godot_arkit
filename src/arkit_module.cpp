@@ -46,8 +46,8 @@ void register_arkit_types() {
 
 	//arkit_interface.instantiate();
 	//XRServer::get_singleton()->add_interface(arkit_interface);
-	//GDREGISTER_CLASS(ARKitAnchorMesh);
-	ClassDB::register_class<ARKitAnchorMesh>();
+	GDREGISTER_CLASS(ARKitAnchorMesh);
+	//ClassDB::register_class<ARKitAnchorMesh>();
 
 #if VERSION_MAJOR >= 4
 #else

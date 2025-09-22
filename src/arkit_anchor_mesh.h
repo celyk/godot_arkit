@@ -44,7 +44,7 @@ using namespace godot;
 
 class ARKitAnchorMesh : public XRPositionalTracker {
 	GDCLASS(ARKitAnchorMesh, XRPositionalTracker);
-	_THREAD_SAFE_CLASS_
+	//_THREAD_SAFE_CLASS_
 
 private:
 	Ref<Mesh> mesh;
