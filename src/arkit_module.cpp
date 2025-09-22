@@ -33,27 +33,17 @@
 #include "arkit_interface.h"
 #include <godot_cpp/core/version.hpp>
 
-#define VERSION_MAJOR GODOT_VERSION_MAJOR
-#define VERSION_MINOR GODOT_VERSION_MINOR
-
-//#include <godot_cpp/classes/class_db_singleton.hpp>
 #include <godot_cpp/core/class_db.hpp>
 
 void register_arkit_types() {
 	ClassDB::register_class<ARKitInterface>();
 
 	//Ref<ARKitInterface> arkit_interface;
-
 	//arkit_interface.instantiate();
 	//XRServer::get_singleton()->add_interface(arkit_interface);
+
 	GDREGISTER_CLASS(ARKitAnchorMesh);
 	//ClassDB::register_class<ARKitAnchorMesh>();
-
-#if VERSION_MAJOR >= 4
-#else
-	//arkit_interface.instance();
-	//ARVRServer::get_singleton()->add_interface(arkit_interface);
-#endif
 }
 
 void unregister_arkit_types() {

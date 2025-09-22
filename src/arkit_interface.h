@@ -33,10 +33,7 @@
 
 #include <godot_cpp/core/version.hpp>
 
-#define VERSION_MAJOR GODOT_VERSION_MAJOR
-#define VERSION_MINOR GODOT_VERSION_MINOR
 
-#if VERSION_MAJOR >= 4
 #include <godot_cpp/classes/xr_interface.hpp>
 #include <godot_cpp/classes/xr_interface_extension.hpp>
 #include <godot_cpp/classes/xr_positional_tracker.hpp>
@@ -50,17 +47,7 @@ typedef PackedByteArray GodotUInt8Vector;
 
 #define GODOT_ARKIT_OVERRIDE override
 //#define GODOT_ARKIT_OVERRIDE
-#else
-#include <godot_cpp/servers/arvr/arvr_interface.h>
-#include <godot_cpp/servers/arvr/arvr_positional_tracker.h>
 
-typedef ARVRInterface GodotBaseARInterface;
-typedef ARVRPositionalTracker GodotARTracker;
-
-typedef PoolVector<uint8_t> GodotUInt8Vector;
-
-#define GODOT_ARKIT_OVERRIDE
-#endif
 
 #include <godot_cpp/classes/camera_feed.hpp>
 
@@ -127,9 +114,7 @@ private:
 	size_t image_height[2];
 	GodotUInt8Vector img_data[2];
 
-#if VERSION_MAJOR >= 4
 	XRInterface::TrackingStatus tracking_state;
-#endif
 
 	struct anchor_map {
 		Ref<GodotARTracker> tracker;
