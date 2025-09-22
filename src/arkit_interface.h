@@ -64,6 +64,8 @@ typedef PoolVector<uint8_t> GodotUInt8Vector;
 
 #include <godot_cpp/classes/camera_feed.hpp>
 
+#include <stdlib.h>
+
 /**
 	@author Bastiaan Olij <mux213@gmail.com>
 
@@ -130,7 +132,7 @@ private:
 #endif
 
 	struct anchor_map {
-		GodotARTracker *tracker;
+		Ref<GodotARTracker> tracker;
 		unsigned char uuid[16];
 	};
 
@@ -138,7 +140,7 @@ private:
 	unsigned int num_anchors;
 	unsigned int max_anchors;
 	anchor_map *anchors;
-	GodotARTracker *get_anchor_for_uuid(const unsigned char *p_uuid);
+	Ref<GodotARTracker> get_anchor_for_uuid(const unsigned char *p_uuid);
 	void remove_anchor_for_uuid(const unsigned char *p_uuid);
 	void remove_all_anchors();
 

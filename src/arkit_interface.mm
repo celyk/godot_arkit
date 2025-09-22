@@ -501,12 +501,14 @@ void ARKitInterface::_post_draw_viewport(const RID &p_render_target, const Rect2
 	//add_blit(p_render_target, src_rect, dst_rect, true, 1, apply_lens_distortion, eye_center, k1, k2, oversample, aspect);
 }
 
-GodotARTracker *ARKitInterface::get_anchor_for_uuid(const unsigned char *p_uuid) {
+Ref<GodotARTracker> ARKitInterface::get_anchor_for_uuid(const unsigned char *p_uuid) {
 	if (anchors == NULL) {
 		num_anchors = 0;
 		max_anchors = 10;
 		anchors = (anchor_map *)malloc(sizeof(anchor_map) * max_anchors);
 	}
+
+	print_line("get_anchor_for_uuid 0");
 
 	ERR_FAIL_NULL_V(anchors, NULL);
 
@@ -516,14 +518,22 @@ GodotARTracker *ARKitInterface::get_anchor_for_uuid(const unsigned char *p_uuid)
 		}
 	}
 
+	print_line("get_anchor_for_uuid 1");
+
 	if (num_anchors + 1 == max_anchors) {
 		max_anchors += 10;
 		anchors = (anchor_map *)realloc(anchors, sizeof(anchor_map) * max_anchors);
 		ERR_FAIL_NULL_V(anchors, NULL);
 	}
 
-#if VERSION_MAJOR >= 4
-	ARKitAnchorMesh *new_tracker = memnew(ARKitAnchorMesh);
+	print_line("get_anchor_for_uuid 2 I'm ready");
+
+#if VERSION_MAJOR == 4
+	Ref<ARKitAnchorMesh> new_tracker; // = memnew(ARKitAnchorMesh);
+	new_tracker.instantiate();
+	
+	print_line("get_anchor_for_uuid 3");
+	
 	new_tracker->set_tracker_type(XRServer::TRACKER_ANCHOR);
 #else
 	ARVRPositionalTracker *new_tracker = memnew(ARVRPositionalTracker);
@@ -531,18 +541,19 @@ GodotARTracker *ARKitInterface::get_anchor_for_uuid(const unsigned char *p_uuid)
 #endif
 
 	char tracker_name[256];
-	//sprintf(tracker_name, "Anchor %02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x", p_uuid[0], p_uuid[1], p_uuid[2], p_uuid[3], p_uuid[4], p_uuid[5], p_uuid[6], p_uuid[7], p_uuid[8], p_uuid[9], p_uuid[10], p_uuid[11], p_uuid[12], p_uuid[13], p_uuid[14], p_uuid[15]);
+	sprintf(tracker_name, "Anchor %02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x", p_uuid[0], p_uuid[1], p_uuid[2], p_uuid[3], p_uuid[4], p_uuid[5], p_uuid[6], p_uuid[7], p_uuid[8], p_uuid[9], p_uuid[10], p_uuid[11], p_uuid[12], p_uuid[13], p_uuid[14], p_uuid[15]);
+
 
 	String name = tracker_name;
 	print_line("Adding tracker " + name);
-#if VERSION_MAJOR >= 4
+#if VERSION_MAJOR == 4
 	new_tracker->set_tracker_name(name);
 #else
 	new_tracker->set_name(name);
 #endif
 
 // add our tracker
-#if VERSION_MAJOR >= 4
+#if VERSION_MAJOR == 4
 	XRServer::get_singleton()->add_tracker(new_tracker);
 #else
 	ARVRServer::get_singleton()->add_tracker(new_tracker);
@@ -559,7 +570,7 @@ void ARKitInterface::remove_anchor_for_uuid(const unsigned char *p_uuid) {
 		for (unsigned int i = 0; i < num_anchors; i++) {
 			if (memcmp(anchors[i].uuid, p_uuid, 16) == 0) {
 // remove our tracker
-#if VERSION_MAJOR >= 4
+#if VERSION_MAJOR == 4
 				XRServer::get_singleton()->remove_tracker(anchors[i].tracker);
 #else
 				ARVRServer::get_singleton()->remove_tracker(anchors[i].tracker);
@@ -581,18 +592,19 @@ void ARKitInterface::remove_all_anchors() {
 	if (anchors != NULL) {
 		for (unsigned int i = 0; i < num_anchors; i++) {
 // remove our tracker
-#if VERSION_MAJOR >= 4
+#if VERSION_MAJOR == 4
 			XRServer::get_singleton()->remove_tracker(anchors[i].tracker);
 #else
 			ARVRServer::get_singleton()->remove_tracker(anchors[i].tracker);
 #endif
 		};
 
-		::free(anchors);
+		std::free(anchors);
 		anchors = NULL;
 		num_anchors = 0;
 	}
 }
+
 
 void ARKitInterface::_process() {
 	GODOT_MAKE_THREAD_SAFE
@@ -885,11 +897,16 @@ void ARKitInterface::_add_or_update_anchor(GodotARAnchor *p_anchor) {
 		unsigned char uuid[16];
 		[anchor.identifier getUUIDBytes:uuid];
 
+		print_line("About to add an anchor");
+
 #if VERSION_MAJOR >= 4
-		ARKitAnchorMesh *tracker = get_anchor_for_uuid(uuid);
+		Ref<ARKitAnchorMesh> tracker = get_anchor_for_uuid(uuid);
 #else
 		ARVRPositionalTracker *tracker = get_anchor_for_uuid(uuid);
 #endif
+
+
+		print_line("get_anchor_for_uuid was called");
 
 		if (tracker != NULL) {
 			// lets update our mesh! (using Arjens code as is for now)
@@ -897,6 +914,8 @@ void ARKitInterface::_add_or_update_anchor(GodotARAnchor *p_anchor) {
 
 			// can we safely cast this?
 			ARPlaneAnchor *planeAnchor = (ARPlaneAnchor *)anchor;
+
+			print_line("can we safely cast this?");
 
 			if (@available(iOS 11.3, *)) {
 				if (planeAnchor.geometry.triangleCount > 0) {

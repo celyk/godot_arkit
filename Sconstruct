@@ -14,7 +14,7 @@ if env["platform"] in ["macos", "ios"]:
     env.Append(LINKFLAGS="-framework ARKit")
     env.Append(LINKFLAGS="-framework AVFoundation")
     env.Append(LINKFLAGS="-framework CoreGraphics")
-    env.Append(LINKFLAGS="-framework CoreMotion")
+    #env.Append(LINKFLAGS="-framework CoreMotion")
     env.Append(LINKFLAGS="-framework CoreVideo")
 
     # Compile with debugging symbols
