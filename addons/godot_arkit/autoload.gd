@@ -25,3 +25,5 @@ func _exit_tree():
 	if xr_interface:
 		XRServer.remove_interface(xr_interface)
 		xr_interface = null
+		
+		feed_renderer.cleanup()

@@ -2,7 +2,7 @@ extends RefCounted
 
 var feed := CameraFeed.new()
 var feed_size : Vector2i
-var images : Array[Image]
+var images : Array[Image] = [Image.new(), Image.new()]
 
 func _init() -> void:
 	feed.set_name("ARKitRGB")
@@ -33,7 +33,6 @@ var _RD : RenderingDevice
 var _p_input_texture0 : RID
 var _p_input_texture1 : RID
 var _p_output_texture : RID
-var _p_feed_texture : RID
 var _p_shader : RID
 var _p_pipeline : RID
 var _p_uniform_set : RID
@@ -44,6 +43,8 @@ func _init_render():
 	_setup_compute()
 
 func _cleanup_render():
+	_RD.free_rid(_p_input_texture0)
+	_RD.free_rid(_p_input_texture1)
 	_RD.free_rid(_p_shader)
 
 func _render():
@@ -136,20 +137,31 @@ const _default_source_compute = "
 		// Invocations in the (x, y, z) dimension.
 		layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-		layout(rgba8, set = 0, binding = 0) uniform restrict readonly image2D input_image0;
-		layout(rgba8, set = 0, binding = 1) uniform restrict readonly image2D input_image1;
+		layout(rgba8, set = 0, binding = 0) uniform restrict readonly sampler2D input_image0;
+		layout(rgba8, set = 0, binding = 1) uniform restrict readonly sampler2D input_image1;
 		layout(rgba8, set = 0, binding = 2) uniform restrict writeonly image2D output_image;
+		
+		vec3 ycbcrToRGB(vec3 ycbcr){
+			const mat4 ycbcrToRGBTransform = mat4(
+				vec4(+1.0000, +1.0000, +1.0000, +0.0000),
+				vec4(+0.0000, -0.3441, +1.7720, +0.0000),
+				vec4(+1.4020, -0.7141, +0.0000, +0.0000),
+				vec4(-0.7010, +0.5291, -0.8860, +1.0000)
+			);
+			
+			return (ycbcrToRGB * vec4(ycbcr,1)).rgb;
+		}
 		
 		void main(){
 			vec2 uv = (vec2(gl_GlobalInvocationID.xy) + 0.5) / 128.0;// * 100.0;
 			
-			imageLoad(input_image0, ivec2(gl_GlobalInvocationID.xy));
-			imageLoad(input_image1, ivec2(gl_GlobalInvocationID.xy));
+			vec3 ycbcr = vec3(textureLod(input_image0, uv, 0.0).x, textureLod(input_image1, uv, 0.0).xy);
 			
 			float f = float(gl_GlobalInvocationID.x % 2 == 1);
 			f = sin(uv.x*50.0);
 			f *= sin(uv.y*50.0);
 			//f = 0.0;
+			
 			
 			imageStore(output_image, ivec2(gl_GlobalInvocationID.xy), vec4(uv,f,1));
 		}
