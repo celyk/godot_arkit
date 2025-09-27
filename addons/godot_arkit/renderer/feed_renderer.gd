@@ -30,7 +30,9 @@ func cleanup() -> void:
 # Everything after this point is designed to run on our rendering thread.
 
 var _RD : RenderingDevice
+var _p_input_sampler0 : RID
 var _p_input_texture0 : RID
+var _p_input_sampler1 : RID
 var _p_input_texture1 : RID
 var _p_output_texture : RID
 var _p_shader : RID
@@ -74,7 +76,11 @@ func _texture_create_from_image(img : Image):
 	return _RD.texture_create(rdformat, rdview, [img.get_data()])
 
 func _setup_textures():
+	var sampler_state := RDSamplerState.new()
+	
+	_p_input_sampler0 = _RD.sampler_create(sampler_state)
 	_p_input_texture0 = _texture_create_from_image(images[0])
+	_p_input_sampler1 = _RD.sampler_create(sampler_state)
 	_p_input_texture1 = _texture_create_from_image(images[1])
 	
 	# Workaround to get an RID for the RGBA camera feed
@@ -102,14 +108,18 @@ func _setup_compute():
 	var uniforms = []
 	var uniform := RDUniform.new()
 	uniform.binding = 0
-	uniform.uniform_type = _RD.UNIFORM_TYPE_IMAGE
+	uniform.uniform_type = _RD.UNIFORM_TYPE_SAMPLER_WITH_TEXTURE
+	uniform.add_id(_p_input_sampler0)
 	uniform.add_id(_p_input_texture0)
 	uniforms.push_back( uniform )
+	
 	uniform = RDUniform.new()
 	uniform.binding = 1
-	uniform.uniform_type = _RD.UNIFORM_TYPE_IMAGE
+	uniform.uniform_type = _RD.UNIFORM_TYPE_SAMPLER_WITH_TEXTURE
+	uniform.add_id(_p_input_sampler1)
 	uniform.add_id(_p_input_texture1)
 	uniforms.push_back( uniform )
+	
 	uniform = RDUniform.new()
 	uniform.binding = 2
 	uniform.uniform_type = _RD.UNIFORM_TYPE_IMAGE
