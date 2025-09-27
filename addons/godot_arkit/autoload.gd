@@ -2,6 +2,7 @@
 extends Node
 
 var xr_interface : ARKitInterface
+var feed_renderer = preload("renderer/feed_renderer.gd").new()
 
 func get_interface():
 	return xr_interface
@@ -11,7 +12,14 @@ func _enter_tree():
 	if xr_interface:
 		XRServer.add_interface(xr_interface)
 		print("ARKitInterface has been added to the XRServer")
+		
+		feed_renderer.initialize()
+		
+		CameraServer.monitoring_feeds = true
+		CameraServer.add_feed(feed_renderer.feed)
 
+func _process(delta: float) -> void:
+	feed_renderer.render_feed()
 
 func _exit_tree():
 	if xr_interface:
