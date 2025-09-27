@@ -2,7 +2,8 @@
 extends Node
 
 var xr_interface : ARKitInterface
-var feed_renderer = preload("renderer/feed_renderer.gd").new()
+const FeedRenderer = preload("renderer/feed_renderer.gd")
+var feed_renderer := FeedRenderer.new()
 
 func get_interface():
 	return xr_interface

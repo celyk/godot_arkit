@@ -1,5 +1,8 @@
 extends RefCounted
 
+## FeedRenderer generates an RGB CameraFeed from Y+CBCR images
+## Usage [WIP]:
+
 var feed := CameraFeed.new()
 var feed_size : Vector2i
 var images : Array[Image] = [Image.new(), Image.new()]
@@ -41,6 +44,8 @@ var _p_uniform_set : RID
 var _p_command_list : RID
 
 func _init_render():
+	_RD = RenderingServer.get_rendering_device()
+	
 	_setup_textures()
 	_setup_compute()
 
@@ -64,12 +69,12 @@ func _texture_create_from_image(img : Image):
 	var rdformat := RDTextureFormat.new()
 	rdformat.format = _RD.DataFormat.DATA_FORMAT_R8G8B8A8_UNORM
 	rdformat.texture_type = RenderingDevice.TEXTURE_TYPE_2D
-	rdformat.width = feed_size.x
-	rdformat.height = feed_size.y
+	rdformat.width = img.get_size().x
+	rdformat.height = img.get_size().y
 	rdformat.depth = 1
 	rdformat.array_layers = 1
 	rdformat.mipmaps = 1
-	rdformat.usage_bits = _RD.TEXTURE_USAGE_STORAGE_BIT | _RD.TEXTURE_USAGE_SAMPLING_BIT
+	rdformat.usage_bits = _RD.TEXTURE_USAGE_STORAGE_BIT | _RD.TEXTURE_USAGE_SAMPLING_BIT | _RD.TEXTURE_USAGE_CAN_UPDATE_BIT
 	
 	var rdview := RDTextureView.new()
 	
@@ -77,6 +82,7 @@ func _texture_create_from_image(img : Image):
 
 func _setup_textures():
 	var sampler_state := RDSamplerState.new()
+	sampler_state.mag_filter = RenderingDevice.SAMPLER_FILTER_LINEAR
 	
 	_p_input_sampler0 = _RD.sampler_create(sampler_state)
 	_p_input_texture0 = _texture_create_from_image(images[0])
@@ -95,6 +101,8 @@ func _setup_textures():
 		1,
 		1,
 		1)
+	
+	_RD.texture_clear(_p_output_texture, Color(0, 0, 0.9, 1), 0, 1, 0, 1)
 
 func _update_textures():
 	_RD.texture_update(_p_input_texture0, 0, images[0].get_data())
@@ -147,8 +155,8 @@ const _default_source_compute = "
 		// Invocations in the (x, y, z) dimension.
 		layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-		layout(rgba8, set = 0, binding = 0) uniform restrict readonly sampler2D input_image0;
-		layout(rgba8, set = 0, binding = 1) uniform restrict readonly sampler2D input_image1;
+		layout(set = 0, binding = 0) uniform sampler2D input_image0;
+		layout(set = 0, binding = 1) uniform sampler2D input_image1;
 		layout(rgba8, set = 0, binding = 2) uniform restrict writeonly image2D output_image;
 		
 		vec3 ycbcrToRGB(vec3 ycbcr){
@@ -159,11 +167,14 @@ const _default_source_compute = "
 				vec4(-0.7010, +0.5291, -0.8860, +1.0000)
 			);
 			
-			return (ycbcrToRGB * vec4(ycbcr,1)).rgb;
+			return (ycbcrToRGBTransform * vec4(ycbcr,1)).rgb;
 		}
 		
 		void main(){
-			vec2 uv = (vec2(gl_GlobalInvocationID.xy) + 0.5) / 128.0;// * 100.0;
+			vec2 resolution = vec2(textureSize(input_image0,0));
+			resolution = max(resolution, vec2(textureSize(input_image1,0)) );
+			
+			vec2 uv = (vec2(gl_GlobalInvocationID.xy) + 0.5) / resolution; // * 100.0;
 			
 			vec3 ycbcr = vec3(textureLod(input_image0, uv, 0.0).x, textureLod(input_image1, uv, 0.0).xy);
 			
@@ -172,7 +183,13 @@ const _default_source_compute = "
 			f *= sin(uv.y*50.0);
 			//f = 0.0;
 			
+			vec3 col = textureLod(input_image1, uv, 0.0).rgb;
+			//col = vec3(uv,f);
+			//col = vec3(uv,0);
+			//col.z += step(0.51, col.x);
 			
-			imageStore(output_image, ivec2(gl_GlobalInvocationID.xy), vec4(uv,f,1));
+			col = ycbcrToRGB(ycbcr);
+			
+			imageStore(output_image, ivec2(gl_GlobalInvocationID.xy), vec4(col,1));
 		}
 		"
