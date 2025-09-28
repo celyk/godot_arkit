@@ -3,18 +3,21 @@ extends RefCounted
 ## FeedRenderer generates an RGB CameraFeed from Y+CBCR images
 ## Usage [WIP]:
 
-var feed := CameraFeed.new()
+var feed : CameraFeed
 var feed_size : Vector2i
 var images : Array[Image] = [Image.new(), Image.new()]
 
 func _init() -> void:
-	feed.set_name("ARKitRGB")
-	feed.feed_is_active = true
+	CameraServer.monitoring_feeds = true
+	feed = CameraFeed.new()
+	feed.set_name("ShaderCameraFeed")
+	
 
 func set_feed_size(size:Vector2i):
 	feed_size = size
-	
+
 	# Initialize the RGB camera feed the only way we can. Note: feed_is_active has to be enabled for this to work
+	feed.feed_is_active = true
 	var img := Image.create_empty(feed_size.x, feed_size.y, false, Image.Format.FORMAT_RGBA8)
 	feed.set_rgb_image(img)
 
@@ -167,7 +170,7 @@ const _default_source_compute = "
 				vec4(-0.7010, +0.5291, -0.8860, +1.0000)
 			);
 			
-			return (ycbcrToRGBTransform * vec4(ycbcr,1)).rgb;
+			return ((ycbcrToRGBTransform) * vec4(ycbcr,1)).rgb;
 		}
 		
 		void main(){
@@ -189,6 +192,17 @@ const _default_source_compute = "
 			//col.z += step(0.51, col.x);
 			
 			col = ycbcrToRGB(ycbcr);
+			
+			/*
+			if(uv.x > 0.3){
+				col = textureLod(input_image0, uv, 0.0).rgb;
+			}
+			if(uv.x > 0.6){
+				col = textureLod(input_image1, uv, 0.0).rgb;
+			}
+			*/
+			
+			//col = vec3(uv,f);
 			
 			imageStore(output_image, ivec2(gl_GlobalInvocationID.xy), vec4(col,1));
 		}

@@ -170,6 +170,28 @@ real_t ARKitInterface::get_exposure_offset() const {
 	return exposure_offset;
 }
 
+TypedArray<Image> ARKitInterface::get_image_planes() const {
+	TypedArray<Ref<Image>> ret;
+
+	if (img_data[0].is_empty()){
+		return ret;
+	}
+	if (img_data[1].is_empty()){
+		return ret;
+	}
+
+	ret.resize(2);
+
+	ret[0] = Image::create_from_data(image_width[0], image_height[0], false, Image::FORMAT_R8, img_data[0]);
+	ret[1] = Image::create_from_data(image_width[1], image_height[1], false, Image::FORMAT_RG8, img_data[1]);
+
+	return ret;
+}
+
+void ARKitInterface::set_image_planes() {
+	
+}
+
 StringName ARKitInterface::_get_name() const {
 	return "ARKit";
 }
@@ -247,6 +269,8 @@ void ARKitInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_exposure_offset"), &ARKitInterface::get_exposure_offset);
 
 	ClassDB::bind_method(D_METHOD("raycast", "screen_coord"), &ARKitInterface::raycast);
+
+	ClassDB::bind_method(D_METHOD("get_image_planes"), &ARKitInterface::get_image_planes);
 }
 
 bool ARKitInterface::_is_initialized() const {
@@ -293,7 +317,7 @@ bool ARKitInterface::_initialize() {
 
 				CameraServer *cs = CameraServer::get_singleton();
 				if (cs != NULL) {
-					cs->add_feed(feed);
+					//cs->add_feed(feed);
 				}
 			}
 			feed->set_active(true);

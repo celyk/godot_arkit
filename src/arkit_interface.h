@@ -106,6 +106,7 @@ private:
 	size_t image_width[2];
 	size_t image_height[2];
 	GodotUInt8Vector img_data[2];
+	//TypedArray<Image> imgs;
 
 	XRInterface::TrackingStatus tracking_state;
 
@@ -134,6 +135,9 @@ public:
 	real_t get_ambient_intensity() const;
 	real_t get_ambient_color_temperature() const;
 	real_t get_exposure_offset() const;
+
+	TypedArray<Image> get_image_planes() const;
+	void set_image_planes();
 
 	/* while Godot has its own raycast logic this takes ARKits camera into account and hits on any ARAnchor */
 	Array raycast(Vector2 p_screen_coord);
