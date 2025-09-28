@@ -37,6 +37,8 @@
 #include <godot_cpp/classes/xr_interface.hpp>
 #include <godot_cpp/classes/xr_interface_extension.hpp>
 #include <godot_cpp/classes/xr_positional_tracker.hpp>
+#include <godot_cpp/classes/cubemap.hpp>
+
 #include "arkit_anchor_mesh.h"
 
 typedef PackedByteArray GodotUInt8Vector;
@@ -46,6 +48,12 @@ typedef PackedByteArray GodotUInt8Vector;
 #include <godot_cpp/classes/camera_feed.hpp>
 
 #include <stdlib.h>
+
+#ifdef __OBJC__
+//#import <ARKit/ARKit.h>
+//#import <UIKit/UIKit.h>
+#import <Metal/Metal.h>
+#endif
 
 /**
 	@author Bastiaan Olij <mux213@gmail.com>
@@ -106,6 +114,10 @@ private:
 	size_t image_width[2];
 	size_t image_height[2];
 	GodotUInt8Vector img_data[2];
+	//id<MTLTexture> environment_texture;
+	//GodotARAnchor* environment_anchor;
+	Ref<Cubemap> environment_map;
+
 	//TypedArray<Image> imgs;
 
 	XRInterface::TrackingStatus tracking_state;
@@ -138,6 +150,8 @@ public:
 
 	TypedArray<Image> get_image_planes() const;
 	void set_image_planes();
+
+	Ref<Cubemap> get_environment_map() const;
 
 	/* while Godot has its own raycast logic this takes ARKits camera into account and hits on any ARAnchor */
 	Array raycast(Vector2 p_screen_coord);

@@ -37,6 +37,7 @@
 #include <godot_cpp/classes/display_server.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/image.hpp>
+#include <godot_cpp/classes/cubemap.hpp>
 
 #define GODOT_FOCUS_IN_NOTIFICATION DisplayServer::WINDOW_EVENT_FOCUS_IN
 #define GODOT_FOCUS_OUT_NOTIFICATION DisplayServer::WINDOW_EVENT_FOCUS_OUT
@@ -52,6 +53,7 @@
 
 #import <ARKit/ARKit.h>
 #import <UIKit/UIKit.h>
+//#import <Metal/Metal.h>
 
 #include <dlfcn.h>
 
@@ -80,8 +82,10 @@ void ARKitInterface::start_session() {
 		if (@available(iOS 11, *)) {
 			Class ARWorldTrackingConfigurationClass = NSClassFromString(@"ARWorldTrackingConfiguration");
 			ARWorldTrackingConfiguration *configuration = [ARWorldTrackingConfigurationClass new];
-
+			
+			configuration.wantsHDREnvironmentTextures = false;
 			configuration.lightEstimationEnabled = light_estimation_is_enabled;
+			configuration.environmentTexturing = AREnvironmentTexturingAutomatic;
 			if (plane_detection_is_enabled) {
 				print_line("Starting plane detection");
 				if (@available(iOS 11.3, *)) {
@@ -192,6 +196,11 @@ void ARKitInterface::set_image_planes() {
 	
 }
 
+
+Ref<Cubemap> ARKitInterface::get_environment_map() const {
+	return environment_map;
+}
+
 StringName ARKitInterface::_get_name() const {
 	return "ARKit";
 }
@@ -271,6 +280,8 @@ void ARKitInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("raycast", "screen_coord"), &ARKitInterface::raycast);
 
 	ClassDB::bind_method(D_METHOD("get_image_planes"), &ARKitInterface::get_image_planes);
+
+	ClassDB::bind_method(D_METHOD("get_environment_map"), &ARKitInterface::get_environment_map);
 }
 
 bool ARKitInterface::_is_initialized() const {
@@ -802,12 +813,58 @@ void ARKitInterface::_add_or_update_anchor(GodotARAnchor *p_anchor) {
 	if (@available(iOS 11.0, *)) {
 		ARAnchor *anchor = (ARAnchor *)p_anchor;
 
-		unsigned char uuid[16];
-		[anchor.identifier getUUIDBytes:uuid];
+		if ( [anchor isMemberOfClass:[AREnvironmentProbeAnchor class]] ) {
+			AREnvironmentProbeAnchor *EnvAnchor = (AREnvironmentProbeAnchor *)anchor;
 
-		Ref<ARKitAnchorMesh> tracker = get_anchor_for_uuid(uuid);
+			id<MTLTexture> environment_texture = EnvAnchor.environmentTexture;
+			MTLTextureType type = [environment_texture textureType];
+            MTLPixelFormat format = [environment_texture pixelFormat];
+            int level_count = (int) [environment_texture mipmapLevelCount];
+            int width = (int) [environment_texture width];
+            int height = (int) [environment_texture height];
+            int bytes_per_row = (int) [environment_texture bufferBytesPerRow];
 
-		if (tracker != NULL) {
+            //assert(format == MTLPixelFormatBGRA8Unorm_sRGB);
+			//print_line("format: ", format);
+			//NSLog(@"Format: %@", format);
+
+			//if (format == MTLPixelFormatRGBA16Float)
+			if (format == MTLPixelFormatBGRA8Unorm_sRGB)
+			if (type == MTLTextureTypeCube){
+			if (width > 0 && height > 0){
+				PackedByteArray buffer;
+
+				const int pixel_size = 4;
+				buffer.resize(width * height * pixel_size);
+
+				int w = width;
+				int h = height;
+
+				TypedArray<Image> faces;
+				faces.resize(6);
+
+				for (int k = 0; k < 6; ++k)
+				{
+					//uint8_t *w = buffer[0].ptrw();
+				
+					[environment_texture getBytes:buffer.ptrw() bytesPerRow:w * pixel_size bytesPerImage:w * h * pixel_size fromRegion:MTLRegionMake2D(0, 0, w, h) mipmapLevel:0 slice:k];
+					
+					faces[k] = Image::create_from_data(w, h, false, Image::FORMAT_RGBA8, buffer);
+					//m_texture_env->UpdateCubemap(buffer, (CubemapFace) k, j);
+				}
+
+				environment_map.instantiate();
+				environment_map->create_from_images(faces);
+			}
+			}
+		}
+
+		if ( [anchor isMemberOfClass:[ARPlaneAnchor class]] ) {
+			unsigned char uuid[16];
+			[anchor.identifier getUUIDBytes:uuid];
+
+			Ref<ARKitAnchorMesh> tracker = get_anchor_for_uuid(uuid);
+
 			// lets update our mesh! (using Arjens code as is for now)
 			// we should also probably limit how often we do this...
 
