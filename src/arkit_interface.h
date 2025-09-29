@@ -118,6 +118,8 @@ private:
 	//id<MTLTexture> environment_texture;
 	//GodotARAnchor* environment_anchor;
 	Ref<Cubemap> environment_map;
+	TypedArray<Image> reference_images;
+	TypedArray<Vector2> reference_images_physical_width;
 
 	//TypedArray<Image> imgs;
 
@@ -148,7 +150,7 @@ public:
 	bool get_image_tracking_is_enabled() const;
 	void set_image_tracking_is_enabled(bool p_enable);
 
-	void set_reference_images(TypedArray<Image> images);
+	void set_reference_images(TypedArray<Image> images, TypedArray<Vector2> physical_widths);
 
 	real_t get_ambient_intensity() const;
 	real_t get_ambient_color_temperature() const;

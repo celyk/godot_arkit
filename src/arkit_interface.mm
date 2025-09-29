@@ -98,6 +98,68 @@ void ARKitInterface::start_session() {
 				configuration.planeDetection = 0;
 			}
 
+			if(image_tracking_is_enabled){
+				configuration.maximumNumberOfTrackedImages = 100;
+
+				NSMutableSet<ARReferenceImage *> *ns_reference_images = [NSMutableSet new];
+
+				//for(int i=0;)
+
+				for (int i = 0; i < reference_images.size(); i++) {
+					Ref<Image> image = reference_images[i];
+
+					image->convert(Image::Format::FORMAT_RGBA8);
+
+
+					PackedByteArray buffer = image->get_data();
+
+					int width = (int) image->get_size().x;
+					int height = (int) image->get_size().y;
+
+					const int pixel_size = 4;
+					int bytes_per_row = width * pixel_size;
+
+					//int stride = (int) [environment_texture bufferBytesPerRow];
+
+					CGColorSpaceRef color_space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+
+					CGDataProviderRef provider = CGDataProviderCreateWithData(NULL, buffer.ptrw(), bytes_per_row * height, NULL);
+
+					CGImageRef cgimage = CGImageCreate(
+						width,
+						height,
+						8,
+						32,
+						bytes_per_row,
+						color_space,
+						(CGBitmapInfo) kCGImageAlphaPremultipliedLast,
+						provider,
+						NULL,
+						YES,
+						kCGRenderingIntentDefault
+					);
+
+
+					CGColorSpaceRelease(color_space);
+
+					CGDataProviderRelease(provider);
+
+					float physical_width = ((Vector2)reference_images_physical_width[i]).x;
+					ARReferenceImage *referenceImage = [[ARReferenceImage alloc]
+                                          initWithCGImage:cgimage
+                                          orientation:kCGImagePropertyOrientationUp
+                                          physicalWidth: physical_width
+                                          ];
+
+					CGImageRelease(cgimage);
+
+					//referenceImage.name = imageInfo[@"name"];
+					[ns_reference_images addObject:referenceImage];
+				}
+
+				configuration.detectionImages = ns_reference_images;
+			}
+
 			// make sure our camera is on
 			if (feed.is_valid()) {
 				feed->set_active(true);
@@ -177,8 +239,9 @@ void ARKitInterface::set_image_tracking_is_enabled(bool p_enable) {
 	}
 }
 
-void ARKitInterface::set_reference_images(TypedArray<Image> images) {
-
+void ARKitInterface::set_reference_images(TypedArray<Image> images, TypedArray<Vector2> physical_widths) {
+	reference_images = images;
+	reference_images_physical_width = physical_widths;
 }
 
 
@@ -297,7 +360,7 @@ void ARKitInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_image_tracking_is_enabled"), &ARKitInterface::get_image_tracking_is_enabled);
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "image_tracking"), "set_image_tracking_is_enabled", "get_image_tracking_is_enabled");
 	
-	ClassDB::bind_method(D_METHOD("set_reference_images", "images"), &ARKitInterface::set_reference_images);
+	ClassDB::bind_method(D_METHOD("set_reference_images", "images", "physical_widths"), &ARKitInterface::set_reference_images);
 	
 	ClassDB::bind_method(D_METHOD("get_ambient_intensity"), &ARKitInterface::get_ambient_intensity);
 	ClassDB::bind_method(D_METHOD("get_ambient_color_temperature"), &ARKitInterface::get_ambient_color_temperature);
