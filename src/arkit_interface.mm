@@ -162,6 +162,26 @@ void ARKitInterface::set_light_estimation_is_enabled(bool p_enable) {
 	}
 }
 
+bool ARKitInterface::get_image_tracking_is_enabled() const {
+	return image_tracking_is_enabled;
+}
+
+void ARKitInterface::set_image_tracking_is_enabled(bool p_enable) {
+	if (image_tracking_is_enabled != p_enable) {
+		image_tracking_is_enabled = p_enable;
+
+		// Restart our session (this will be ignore if we're not initialised)
+		if (session_was_started) {
+			start_session();
+		}
+	}
+}
+
+void ARKitInterface::set_reference_images(TypedArray<Image> images) {
+
+}
+
+
 real_t ARKitInterface::get_ambient_intensity() const {
 	return ambient_intensity;
 }
@@ -273,6 +293,12 @@ void ARKitInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_light_estimation_is_enabled"), &ARKitInterface::get_light_estimation_is_enabled);
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "light_estimation"), "set_light_estimation_is_enabled", "get_light_estimation_is_enabled");
 
+	ClassDB::bind_method(D_METHOD("set_image_tracking_is_enabled", "enable"), &ARKitInterface::set_image_tracking_is_enabled);
+	ClassDB::bind_method(D_METHOD("get_image_tracking_is_enabled"), &ARKitInterface::get_image_tracking_is_enabled);
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "image_tracking"), "set_image_tracking_is_enabled", "get_image_tracking_is_enabled");
+	
+	ClassDB::bind_method(D_METHOD("set_reference_images", "images"), &ARKitInterface::set_reference_images);
+	
 	ClassDB::bind_method(D_METHOD("get_ambient_intensity"), &ARKitInterface::get_ambient_intensity);
 	ClassDB::bind_method(D_METHOD("get_ambient_color_temperature"), &ARKitInterface::get_ambient_color_temperature);
 	ClassDB::bind_method(D_METHOD("get_exposure_offset"), &ARKitInterface::get_exposure_offset);

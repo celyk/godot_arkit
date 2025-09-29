@@ -101,6 +101,7 @@ private:
 	bool session_was_started;
 	bool plane_detection_is_enabled;
 	bool light_estimation_is_enabled;
+	bool image_tracking_is_enabled;
 	real_t ambient_intensity;
 	real_t ambient_color_temperature;
 	real_t exposure_offset;
@@ -143,6 +144,11 @@ public:
 	void stop_session();
 	bool get_light_estimation_is_enabled() const;
 	void set_light_estimation_is_enabled(bool p_enable);
+
+	bool get_image_tracking_is_enabled() const;
+	void set_image_tracking_is_enabled(bool p_enable);
+
+	void set_reference_images(TypedArray<Image> images);
 
 	real_t get_ambient_intensity() const;
 	real_t get_ambient_color_temperature() const;
