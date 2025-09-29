@@ -28,8 +28,8 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#ifndef ARKIT_ANCHOR_MESH_H
-#define ARKIT_ANCHOR_MESH_H
+#ifndef ARKIT_ANCHOR_IMAGE_H
+#define ARKIT_ANCHOR_IMAGE_H
 
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/core/version.hpp>
@@ -61,4 +61,4 @@ public:
 	~ARKitAnchorImage();
 };
 
-#endif /* !ARKIT_ANCHOR_MESH_H */
+#endif /* !ARKIT_ANCHOR_IMAGE_H */

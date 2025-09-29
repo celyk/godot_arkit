@@ -58,6 +58,8 @@
 #include <dlfcn.h>
 
 #include "arkit_anchor_mesh.h"
+#include "arkit_anchor_image.h"
+
 #include "arkit_interface.h"
 #include "arkit_session_delegate.h"
 
@@ -100,6 +102,7 @@ void ARKitInterface::start_session() {
 
 			if(image_tracking_is_enabled){
 				configuration.maximumNumberOfTrackedImages = 100;
+				configuration.automaticImageScaleEstimationEnabled = true;
 
 				NSMutableSet<ARReferenceImage *> *ns_reference_images = [NSMutableSet new];
 
@@ -575,7 +578,7 @@ void ARKitInterface::_post_draw_viewport(const RID &p_render_target, const Rect2
 	//add_blit(p_render_target, src_rect, dst_rect, true, 1, apply_lens_distortion, eye_center, k1, k2, oversample, aspect);
 }
 
-Ref<ARKitAnchorMesh> ARKitInterface::get_anchor_for_uuid(const unsigned char *p_uuid) {
+Ref<XRPositionalTracker> ARKitInterface::get_anchor_for_uuid(const unsigned char *p_uuid, Ref<XRPositionalTracker> tracker) {
 	if (anchors == NULL) {
 		num_anchors = 0;
 		max_anchors = 10;
@@ -596,8 +599,10 @@ Ref<ARKitAnchorMesh> ARKitInterface::get_anchor_for_uuid(const unsigned char *p_
 		ERR_FAIL_NULL_V(anchors, NULL);
 	}
 
-	Ref<ARKitAnchorMesh> new_tracker; // = memnew(ARKitAnchorMesh);
-	new_tracker.instantiate();
+	Ref<XRPositionalTracker> new_tracker; // = memnew(ARKitAnchorMesh);
+	//new_tracker.instantiate();
+
+	new_tracker = tracker;
 	
 	new_tracker->set_tracker_type(XRServer::TRACKER_ANCHOR);
 
@@ -617,6 +622,8 @@ Ref<ARKitAnchorMesh> ARKitInterface::get_anchor_for_uuid(const unsigned char *p_
 	memcpy(anchors[num_anchors].uuid, p_uuid, 16);
 	num_anchors++;
 
+	//tracker = new_tracker;
+	
 	return new_tracker;
 }
 
@@ -952,7 +959,9 @@ void ARKitInterface::_add_or_update_anchor(GodotARAnchor *p_anchor) {
 			unsigned char uuid[16];
 			[anchor.identifier getUUIDBytes:uuid];
 
-			Ref<ARKitAnchorMesh> tracker = get_anchor_for_uuid(uuid);
+			Ref<ARKitAnchorMesh> tracker;
+			tracker.instantiate();
+			tracker = get_anchor_for_uuid(uuid, tracker);
 
 			// lets update our mesh! (using Arjens code as is for now)
 			// we should also probably limit how often we do this...
@@ -1008,6 +1017,38 @@ void ARKitInterface::_add_or_update_anchor(GodotARAnchor *p_anchor) {
 			tracker->set_pose("default", pose, Vector3(), Vector3(), XRPose::XR_TRACKING_CONFIDENCE_HIGH);
 
 #define SNAME(m_arg) ([]() -> const StringName & { static StringName sname = StringName(m_arg, true); return sname; })()
+			XRServer::get_singleton()->emit_signal(SNAME("tracker_updated"), tracker->get_tracker_name(), tracker->get_tracker_type());
+		}
+
+		
+		if ( [anchor isMemberOfClass:[ARImageAnchor class]] ) {
+			unsigned char uuid[16];
+			[anchor.identifier getUUIDBytes:uuid];
+
+			Ref<ARKitAnchorImage> tracker;
+			tracker.instantiate();
+			tracker = get_anchor_for_uuid(uuid, tracker);
+
+			ARImageAnchor *imageAnchor = (ARImageAnchor *)anchor;
+
+			print_line("Image anchor spotted!");
+
+			// Note, this also contains a scale factor which gives us an idea of the size of the anchor
+			// We may extract that in our XRAnchor/ARVRAnchor class
+			Basis b;
+			matrix_float4x4 m44 = anchor.transform;
+			b.rows[0].x = m44.columns[0][0];
+			b.rows[1].x = m44.columns[0][1];
+			b.rows[2].x = m44.columns[0][2];
+			b.rows[0].y = m44.columns[1][0];
+			b.rows[1].y = m44.columns[1][1];
+			b.rows[2].y = m44.columns[1][2];
+			b.rows[0].z = m44.columns[2][0];
+			b.rows[1].z = m44.columns[2][1];
+			b.rows[2].z = m44.columns[2][2];
+			Transform3D pose = Transform3D(b, Vector3(m44.columns[3][0], m44.columns[3][1], m44.columns[3][2]));
+			tracker->set_pose("default", pose, Vector3(), Vector3(), XRPose::XR_TRACKING_CONFIDENCE_HIGH);
+
 			XRServer::get_singleton()->emit_signal(SNAME("tracker_updated"), tracker->get_tracker_name(), tracker->get_tracker_type());
 		}
 	}

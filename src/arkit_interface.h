@@ -40,6 +40,7 @@
 #include <godot_cpp/classes/cubemap.hpp>
 
 #include "arkit_anchor_mesh.h"
+#include "arkit_anchor_image.h"
 
 typedef PackedByteArray GodotUInt8Vector;
 
@@ -126,7 +127,7 @@ private:
 	XRInterface::TrackingStatus tracking_state;
 
 	struct anchor_map {
-		Ref<ARKitAnchorMesh> tracker;
+		Ref<XRPositionalTracker> tracker;
 		unsigned char uuid[16];
 	};
 
@@ -134,7 +135,7 @@ private:
 	unsigned int num_anchors;
 	unsigned int max_anchors;
 	anchor_map *anchors;
-	Ref<ARKitAnchorMesh> get_anchor_for_uuid(const unsigned char *p_uuid);
+	Ref<XRPositionalTracker> get_anchor_for_uuid(const unsigned char *p_uuid, Ref<XRPositionalTracker> tracker);
 	void remove_anchor_for_uuid(const unsigned char *p_uuid);
 	void remove_all_anchors();
 

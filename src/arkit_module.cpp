@@ -43,6 +43,8 @@ void register_arkit_types() {
 	//XRServer::get_singleton()->add_interface(arkit_interface);
 
 	GDREGISTER_CLASS(ARKitAnchorMesh);
+	GDREGISTER_CLASS(ARKitAnchorImage);
+	
 	//ClassDB::register_class<ARKitAnchorMesh>();
 }
 
