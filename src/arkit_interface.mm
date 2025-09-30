@@ -85,6 +85,7 @@ void ARKitInterface::start_session() {
 			Class ARWorldTrackingConfigurationClass = NSClassFromString(@"ARWorldTrackingConfiguration");
 			ARWorldTrackingConfiguration *configuration = [ARWorldTrackingConfigurationClass new];
 			
+			configuration.autoFocusEnabled = false;
 			configuration.wantsHDREnvironmentTextures = false;
 			configuration.lightEstimationEnabled = light_estimation_is_enabled;
 			configuration.environmentTexturing = AREnvironmentTexturingAutomatic;
@@ -101,7 +102,7 @@ void ARKitInterface::start_session() {
 			}
 
 			if(image_tracking_is_enabled){
-				configuration.maximumNumberOfTrackedImages = 100;
+				configuration.maximumNumberOfTrackedImages = 4;
 				configuration.automaticImageScaleEstimationEnabled = true;
 
 				NSMutableSet<ARReferenceImage *> *ns_reference_images = [NSMutableSet new];
