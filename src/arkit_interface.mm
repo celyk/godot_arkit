@@ -994,7 +994,7 @@ void ARKitInterface::_add_or_update_anchor(GodotARAnchor *p_anchor) {
 					surftool.instantiate();
 					surftool->begin(Mesh::PRIMITIVE_TRIANGLES);
 
-					for (int j = planeAnchor.geometry.triangleCount * 3 - 1; j >= 0; j--) {
+					/*for (int j = planeAnchor.geometry.triangleCount * 3 - 1; j >= 0; j--) {
 						int16_t index = planeAnchor.geometry.triangleIndices[j];
 						simd_float3 vrtx = planeAnchor.geometry.vertices[index];
 						simd_float2 textcoord = planeAnchor.geometry.textureCoordinates[index];
@@ -1003,6 +1003,34 @@ void ARKitInterface::_add_or_update_anchor(GodotARAnchor *p_anchor) {
 						surftool->set_color(Color(0.8, 0.8, 0.8));
 
 						surftool->add_vertex(Vector3(vrtx[0], vrtx[1], vrtx[2]));
+					}*/
+
+					{
+					surftool->set_normal(Vector3(0.0, 1.0, 0.0));
+					//surftool->set_uv(Vector2(textcoord[0], textcoord[1]));
+					surftool->set_color(Color(0.8, 0.8, 0.8));
+
+					simd_float3 vrtx = planeAnchor.geometry.boundaryVertices[0];
+					surftool->add_vertex(Vector3(vrtx[0], vrtx[1], vrtx[2]));
+					}
+
+					for (int i = 0; i < planeAnchor.geometry.boundaryVertexCount; i++) {
+						int16_t index = i;
+						simd_float3 vrtx = planeAnchor.geometry.boundaryVertices[index];
+						//simd_float2 textcoord = planeAnchor.geometry.textureCoordinates[index];
+
+						surftool->set_normal(Vector3(0.0, 1.0, 0.0));
+						//surftool->set_uv(Vector2(textcoord[0], textcoord[1]));
+						surftool->set_color(Color(0.8, 0.8, 0.8));
+
+						surftool->add_vertex(Vector3(vrtx[0], vrtx[1], vrtx[2]));
+					}
+
+
+					for (int i = 1; i < planeAnchor.geometry.boundaryVertexCount; i++) {
+						surftool->add_index(0);
+						surftool->add_index(i);
+						surftool->add_index((i+1) % planeAnchor.geometry.boundaryVertexCount);
 					}
 
 					surftool->generate_normals();
