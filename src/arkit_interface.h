@@ -161,7 +161,7 @@ public:
 	void set_image_planes();
 
 	Ref<Cubemap> get_environment_map() const;
-
+	
 	/* while Godot has its own raycast logic this takes ARKits camera into account and hits on any ARAnchor */
 	Array raycast(Vector2 p_screen_coord);
 

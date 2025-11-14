@@ -88,7 +88,7 @@ void ARKitInterface::start_session() {
 			configuration.autoFocusEnabled = false;
 			configuration.wantsHDREnvironmentTextures = false;
 			configuration.lightEstimationEnabled = light_estimation_is_enabled;
-			configuration.environmentTexturing = AREnvironmentTexturingAutomatic;
+			configuration.environmentTexturing = AREnvironmentTexturingManual;
 			if (plane_detection_is_enabled) {
 				print_line("Starting plane detection");
 				if (@available(iOS 11.3, *)) {
@@ -170,6 +170,23 @@ void ARKitInterface::start_session() {
 			}
 
 			[ar_session runWithConfiguration:configuration];
+
+			if(environment_map.is_null()){
+				print_line("setting up env map anchor");
+				
+				// Add an environment probe near the camera so that objects can be lit realistically
+				matrix_float4x4 m44 = matrix_identity_float4x4;
+
+				Vector3 probe_pos = Vector3(0,0,0);
+
+				m44.columns[3][0] = probe_pos.x;
+				m44.columns[3][1] = probe_pos.y;
+				m44.columns[3][2] = probe_pos.z;
+
+				AREnvironmentProbeAnchor *anchor = [[AREnvironmentProbeAnchor alloc] initWithTransform:m44];
+				[ar_session addAnchor:anchor];
+			}
+
 		}
 	}
 }
